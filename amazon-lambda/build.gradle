@@ -1,0 +1,54 @@
+// this block is necessary to make enforcedPlatform work for Quarkus plugin available
+// only locally (snapshot) that is also importing the Quarkus BOM
+buildscript {
+    repositories {
+        mavenLocal()
+    }
+    dependencies {
+        classpath "io.quarkus:quarkus-gradle-plugin:${quarkusVersion}"
+    }
+}
+
+plugins {
+    id 'java'
+}
+
+apply plugin: 'io.quarkus'
+
+repositories {
+     mavenLocal()
+     mavenCentral()
+}
+
+ext {
+    awsLambdaEventsVersion = "2.0.2"
+    awsLambdaCoreVersion = "1.1.0"
+}
+
+dependencies {
+    implementation enforcedPlatform("io.quarkus:quarkus-bom:${quarkusVersion}")
+    implementation 'io.quarkus:quarkus-resteasy-jackson'
+    implementation 'io.quarkus:quarkus-rest-client'
+    implementation 'io.quarkus:quarkus-amazon-lambda'   
+    compileOnly("com.amazonaws:aws-lambda-java-events:${awsLambdaEventsVersion}")
+    compileOnly("com.amazonaws:aws-lambda-java-core:${awsLambdaCoreVersion}")
+
+    testImplementation 'io.quarkus:quarkus-junit5'
+    testImplementation 'io.rest-assured:rest-assured'
+}
+
+task buildZip(type: Zip) {
+    archiveFileName = 'function.zip'
+    destinationDirectory = file("$buildDir")
+
+    from (buildDir) {
+        include '*-runner*', 'lib/*'
+    }
+
+    from ("$buildDir/wiring-classes") {
+        include 'bootstrap'
+        fileMode 0550
+    }
+}
+
+build.dependsOn buildZip

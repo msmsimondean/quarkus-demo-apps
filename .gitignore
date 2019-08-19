@@ -1,5 +1,8 @@
 *.class
 target/
+build/
+out/
+.gradle/
 
 # Log file
 *.log
